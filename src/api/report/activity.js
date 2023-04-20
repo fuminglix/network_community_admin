@@ -10,9 +10,9 @@ import request from '@/utils/request'
 // }
 
 // 查询文章列表
-export function listComment(query) {
+export function listActivity(query) {
   return request({
-    url: '/admin/report/comment/list',
+    url: '/admin/report/activity/list',
     method: 'get',
     params: query
   })
@@ -26,14 +26,13 @@ export function listComment(query) {
 //   })
 // }
 
-// 查询举报评论列表
-export function getComment(id) {
+// 查询分类详细
+export function getActivity(id) {
   return request({
-    url: '/admin/report/comment/' + id,
+    url: '/admin/report/activity/' + id,
     method: 'get'
   })
 }
-
 
 // 处理举报内容
 export function updateRecord(data) {
@@ -43,12 +42,3 @@ export function updateRecord(data) {
     data: data
   })
 }
-
-// // 修改分类
-// export function updateArticle(data) {
-//   return request({
-//     url: '/admin/content/article',
-//     method: 'put',
-//     data: data
-//   })
-// }

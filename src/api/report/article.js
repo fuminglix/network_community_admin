@@ -26,19 +26,19 @@ export function listArticle(query) {
 //   })
 // }
 
-// // 查询分类详细
-// export function getArticle(id) {
-//   return request({
-//     url: '/admin/content/article/' + id,
-//     method: 'get'
-//   })
-// }
+// 查询分类详细
+export function getArticle(id) {
+  return request({
+    url: '/admin/report/article/' + id,
+    method: 'get'
+  })
+}
 
-// // 修改分类
-// export function updateArticle(data) {
-//   return request({
-//     url: '/admin/content/article',
-//     method: 'put',
-//     data: data
-//   })
-// }
+// 处理举报内容
+export function updateRecord(data) {
+  return request({
+    url: '/admin/report/handle',
+    method: 'put',
+    data: data
+  })
+}

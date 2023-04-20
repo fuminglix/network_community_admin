@@ -9,20 +9,20 @@
           :inline="true"
           label-width="68px"
         >
-          <el-form-item label="文章标题" prop="title">
+          <el-form-item label="动态内容" prop="title">
             <el-input
               v-model="queryParams.title"
-              placeholder="请输入文章标题"
+              placeholder="请输入动态内容"
               clearable
               size="small"
               style="width: 240px"
               @keyup.enter.native="handleQuery"
             />
           </el-form-item>
-          <el-form-item label="文章序号" prop="summary">
+          <el-form-item label="用户昵称" prop="summary">
             <el-input
               v-model="queryParams.articleId"
-              placeholder="请输入序号"
+              placeholder="请输入用户昵称"
               clearable
               size="small"
               style="width: 240px"
@@ -67,8 +67,7 @@
 
         <el-table :data="articleList" style="width: 100%" @selection-change="handleSelectionChange">
           <el-table-column type="selection" width="55" />
-          <el-table-column prop="contentId" label="文章ID" align="center"/>
-          <el-table-column prop="title" label="标题" align="center" />
+          <el-table-column prop="contentId" label="动态ID" align="center"/>
           <el-table-column prop="reportCategoryName" label="举报类别" align="center" />
           <el-table-column prop="reportDescription" label="具体描述" align="center" />
           <el-table-column prop="summary" label="举报人信誉值" align="center" />
@@ -109,20 +108,46 @@
     />
     
     <!-- 处理对话框 -->
-    <el-dialog top="5vh" title="处理举报文章" :visible.sync="open" width="80%">
+    <el-dialog top="5vh" style="color:#00aeec" title="处理举报文章" :visible.sync="open" width="80%">
       <el-container class="article-container">
         <el-main>
-          <p class="article-text article-content markdown-body" v-html="form.content"></p>
+          <div class="activity">
+            <h3 style="color:#00aeec">动态内容</h3>
+            <p>{{ form.content }}</p>
+            <span v-if="form.contentImg.length > 0" v-for="url in form.contentImg">
+                <el-image 
+                style="width: 180px; height: 180px"
+                :src="url" 
+                :preview-src-list="form.contentImg"
+                fit="cover">
+                </el-image>
+            </span>
+          </div>
+          <div v-show="form.activityContent != null || form.article != null">
+            <h3 style="color:#00aeec">转发内容</h3>
+            <p v-if="form.article != null" class="article-text article-content markdown-body" v-html="form.article.content"></p>
+            <div v-if="form.activityContent != null">
+              <p>{{ form.activityContent.content }}</p>
+              <span v-if="form.activityContent.contentImg != null" v-for="url in form.activityContent.contentImg">
+                  <el-image 
+                  style="width: 180px; height: 180px"
+                  :src="url" 
+                  :preview-src-list="form.activityContent.contentImg"
+                  fit="cover">
+                  </el-image>
+              </span>
+            </div>  
+          </div>
         </el-main>
         <el-aside width="30%">
           <el-row :gutter="20">
             <el-col :span="12" :offset="0">
-              <h3>举报描述</h3>
+              <h3 style="color:#00aeec">举报描述</h3>
             </el-col>
           </el-row>
           <el-row class="report-span" :gutter="20">
             <el-col :span="6" :offset="0">
-              <span>举报类型</span>
+              <span>举报类型:</span>
             </el-col>
             <el-col :span="18" :offset="0">
               <span style="color:tomato">{{ form.reportCategoryName }}</span>
@@ -130,7 +155,7 @@
           </el-row>
           <el-row style="padding-bottom: 10px;border-bottom:1px solid #c5c5c5" class="report-span" :gutter="20">
             <el-col :span="6" :offset="0">
-              <span>具体描述</span>
+              <span>具体描述:</span>
             </el-col>
             <el-col :span="18" :offset="0">
               <span style="color:tomato">{{ form.reportDescription }}</span>
@@ -139,7 +164,7 @@
           
           <el-row :gutter="20">
             <el-col :span="24" :offset="0">
-              <h3>处理结果</h3>
+              <h3 style="color:#00aeec">处理结果</h3>
             </el-col>
           </el-row>
           <el-row class="report-span" :gutter="20">
@@ -153,9 +178,9 @@
               </el-radio-group>
             </el-col>
           </el-row>
-          <el-row class="report-span" :gutter="20">
+          <el-row v-show="form.repFlag" class="report-span" :gutter="20">
             <el-col :span="12" :offset="0">
-              <span>违规描述</span>
+              <span>违规描述:</span>
             </el-col>
           </el-row>
           <el-row v-show="form.repFlag" :gutter="20">
@@ -182,14 +207,14 @@
 <script>
 // import { getToken } from '@/utils/auth'
 import {
-  listArticle,
-  getArticle,
+  listActivity,
+  getActivity,
   updateRecord,
 }
-from '@/api/report/article'
+from '@/api/report/activity'
 import { mavonEditor } from 'mavon-editor'
 export default {
-  name: 'ReportArticle',
+  name: 'ReportActivity',
   data() {
     return {
       radio1:'',
@@ -198,9 +223,9 @@ export default {
       queryParams: {
         pageNum: 1,
         pageSize: 10,
-        title: undefined,
-        articleId: undefined,
-        type: 0,
+        nickName: undefined,
+        content: undefined,
+        type: 2,
       },
       title: '',
       // 是否显示弹出层
@@ -226,6 +251,9 @@ export default {
         content:null,
         repFlag:null,
         reportResult:null,
+        contentImg:null,
+        activityContent:null,
+        article:null,
         id:null
       }
       this.resetForm('form')
@@ -266,7 +294,7 @@ export default {
     /** 查询用户列表 */
     getList() {
       this.loading = true
-      listArticle(this.queryParams).then((response) => {
+      listActivity(this.queryParams).then((response) => {
         this.articleList = response.rows
         this.total = response.total
         this.loading = false
@@ -276,12 +304,18 @@ export default {
     handleUpdate(row) {
     this.reset()
     // this.getTreeselect()
-    getArticle(row.id).then(response => {
+    getActivity(row.id).then(response => {
       const markdownIt = mavonEditor.getMarkdownIt()
-      this.form.content = markdownIt.render(response.content)
+      this.form.content = response.content
       this.form.reportCategoryName = response.reportCategoryName
       this.form.reportDescription = response.reportDescription
       this.form.id = response.id
+      this.form.contentImg = response.contentImg
+      this.form.activityContent = response.activityContent
+      this.form.article = response.article
+      if(response.article != null){
+        this.form.article.content = markdownIt.render(response.article.content)
+      }
       this.open = true
       this.title = '处理举报文章'
     })
@@ -326,7 +360,10 @@ export default {
   word-break: break-all;
   word-wrap: break-word;
 }
-
+.activity{
+  border-bottom: 1px solid rgb(203, 203, 203);
+  padding-bottom: 10px;
+}
 .article-content{
     width: 100%;
     font-size: 15px;

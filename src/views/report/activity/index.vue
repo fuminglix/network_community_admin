@@ -113,7 +113,7 @@
         <el-main>
           <div class="activity">
             <h3 style="color:#00aeec">动态内容</h3>
-            <p>{{ form.content }}</p>
+            <p v-html="form.content"></p>
             <span v-if="form.contentImg.length > 0" v-for="url in form.contentImg">
                 <el-image 
                 style="width: 180px; height: 180px"
@@ -306,7 +306,8 @@ export default {
     // this.getTreeselect()
     getActivity(row.id).then(response => {
       const markdownIt = mavonEditor.getMarkdownIt()
-      this.form.content = response.content
+      this.replaceSrc(response.content)
+      
       this.form.reportCategoryName = response.reportCategoryName
       this.form.reportDescription = response.reportDescription
       this.form.id = response.id
@@ -333,7 +334,18 @@ export default {
         this.getList()
         this.$modal.msgSuccess('删除成功')
       }).catch(() => {})
-    }
+    },
+    replaceSrc(txt) {
+      txt = txt.replace(new RegExp(' ', 'gm'), '&nbsp;') // gm 全局替换
+      const arr = []
+      txt.split('\n').forEach(item => {
+          arr.push(`<p>${item.trim()}</p>`)
+      })
+      txt = arr.join('')
+      this.form.content = txt
+      console.log("result",txt)
+    },
+
   }
 }
 </script>
